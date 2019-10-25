@@ -1,6 +1,9 @@
-import numpy as np
 from abc import abstractmethod, ABCMeta
+from typing import List, Type, Dict, Union
+import re
 import matplotlib.pyplot as plt
+import numpy as np
+import os
 
 
 class NetworkComponent(metaclass=ABCMeta):
@@ -12,9 +15,15 @@ class NetworkComponent(metaclass=ABCMeta):
     def backward(self, dx: np.ndarray) -> np.ndarray:
         pass
 
+    @classmethod
+    def get_layer_name(cls) -> str:
+        return cls.__name__
+
 
 class Neuron(NetworkComponent):
-    def __init__(self, input_dim: int, output_dim: int, lr: float):
+    def __init__(self, input_dim: int, output_dim: int, lr: float = 0.001):
+        self.input_dim = input_dim
+        self.output_dim = output_dim
         self.weight = np.random.randn(output_dim, input_dim)
         self.input = np.zeros((input_dim, 1))
         self.grad = np.zeros(self.weight.shape)
@@ -32,6 +41,9 @@ class Neuron(NetworkComponent):
 
     def update(self):
         self.weight -= self.grad * self.lr
+
+    def __str__(self):
+        return f"{self.get_layer_name()} : input({self.input_dim}) -> output({self.output_dim})"
 
 
 class ReLU(NetworkComponent):
@@ -67,6 +79,9 @@ class MSE:
 
 
 class NeuralNetwork:
+    layers: List[NetworkComponent]
+    history: List[np.float64]
+
     def __init__(self):
         self.layers = []
         self.history = []
@@ -74,7 +89,7 @@ class NeuralNetwork:
     def add_layer(self, layer: NetworkComponent) -> None:
         self.layers.append(layer)
 
-    def learn(self, epoch: int, x: np.ndarray, y: np.ndarray) -> list:
+    def learn(self, x: np.ndarray, y: np.ndarray, epoch: int) -> list:
         if x.shape[0] != y.shape[0]:
             raise ValueError(f"Invalid x or y, {x.shape[0]} != {y.shape[0]}")
         self.history.clear()
@@ -98,12 +113,59 @@ class NeuralNetwork:
             print(f"Loss = {self.history[-1]}")
         return self.history
 
-    def plot_loss(self):
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        feed_forward = self.layers[0].forward(x)
+        for l in self.layers[1:]:
+            feed_forward = l.forward(feed_forward)
+        return feed_forward
+
+    def plot_loss(self) -> None:
         plt.plot(self.history)
         plt.show()
 
-    def load_model(self):
-        pass
+    def load_model(self, file_path: str = "./model.txt") -> None:
+        file = open(file_path, mode="r", encoding="utf-8")
+        str2class: Dict[str, Type[Union[Neuron, Sigmoid, ReLU]]] = {
+            Neuron.get_layer_name(): Neuron,
+            Sigmoid.get_layer_name(): Sigmoid,
+            ReLU.get_layer_name(): ReLU
+        }
+        pattern_option = re.compile(r"([^ ,\n]+)")
+        for l in file:
+            re_res: List[str] = pattern_option.findall(l)
+            layer_class = str2class.get(re_res[1])
+            if layer_class is not None:
+                if layer_class == Neuron:
+                    self.layers.append(layer_class(int(re_res[2]), int(re_res[3]), float(re_res[4])))
+                else:
+                    self.layers.append(layer_class())
+        file.close()
 
-    def load_weight(self):
-        pass
+    def load_weight(self, file_dir: str = "./weight") -> None:
+        if file_dir[-1] != "/":
+            file_dir += "/"
+        for n_layer, l in enumerate(self.layers):
+            if isinstance(l, Neuron):
+                file_path = f"{file_dir}{n_layer}_{l.get_layer_name()}.npy"
+                l.weight = np.load(file_path)
+
+    def save_model(self, file_path: str = "./model.txt") -> None:
+        file = open(file_path, mode="w", encoding="utf-8")
+        layer_detail: List[str] = []
+        for n_layer, l in enumerate(self.layers):
+            detail = f"{n_layer}, {l.get_layer_name()}, "
+            if isinstance(l, Neuron):
+                detail += f"{l.input_dim}, {l.output_dim}, {l.lr}, "
+            layer_detail.append(detail)
+        file.writelines("\n".join(layer_detail))
+        file.close()
+
+    def save_weight(self, file_dir: str = "./weight") -> None:
+        if not os.path.exists(file_dir):
+            os.mkdir(file_dir)
+        if file_dir[-1] != "/":
+            file_dir += "/"
+        for n_layer, l in enumerate(self.layers):
+            if isinstance(l, Neuron):
+                file_path = f"{file_dir}{n_layer}_{l.get_layer_name()}.npy"
+                np.save(file_path, l.weight)
