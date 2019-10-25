@@ -1,81 +1,11 @@
-from abc import abstractmethod, ABCMeta
-from typing import List, Type, Dict, Union
+import os
 import re
+from typing import List, Type, Dict, Union
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 
-
-class NetworkComponent(metaclass=ABCMeta):
-    @abstractmethod
-    def forward(self, x: np.ndarray) -> np.ndarray:
-        pass
-
-    @abstractmethod
-    def backward(self, dx: np.ndarray) -> np.ndarray:
-        pass
-
-    @classmethod
-    def get_layer_name(cls) -> str:
-        return cls.__name__
-
-
-class Neuron(NetworkComponent):
-    def __init__(self, input_dim: int, output_dim: int, lr: float = 0.001):
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.weight = np.random.randn(output_dim, input_dim)
-        self.input = np.zeros((input_dim, 1))
-        self.grad = np.zeros(self.weight.shape)
-        self.lr = lr
-
-    def forward(self, x: np.ndarray):
-        if self.input.shape != x.shape:
-            raise ValueError(f"Expected shape {self.input.shape}, but input shape {x.shape}")
-        self.input = x
-        return np.dot(self.weight, self.input)
-
-    def backward(self, dx: np.ndarray):
-        self.grad = np.dot(dx, self.input.reshape(1, -1))
-        return np.dot(self.weight.T, dx)
-
-    def update(self):
-        self.weight -= self.grad * self.lr
-
-    def __str__(self):
-        return f"{self.get_layer_name()} : input({self.input_dim}) -> output({self.output_dim})"
-
-
-class ReLU(NetworkComponent):
-    def forward(self, x: np.ndarray) -> np.ndarray:
-        return np.maximum(0, x)
-
-    def backward(self, dx: np.ndarray) -> np.ndarray:
-        return np.where(dx > 0, 1, 0)
-
-
-class Sigmoid(NetworkComponent):
-    def __init__(self):
-        self.output = None
-
-    def forward(self, x: np.ndarray):
-        self.output = 1 / (1 + np.exp(-x))
-        return self.output
-
-    def backward(self, dx: np.ndarray):
-        return self.output * (1 - self.output)
-
-
-class MSE:
-    @classmethod
-    def forward(cls, x: np.ndarray, y: np.ndarray) -> np.float64:
-        return np.mean(np.square(y.flatten() - x.flatten())) / 2
-
-    @classmethod
-    def backward(cls, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        if x.shape != y.shape:
-            raise ValueError(f"Invalid shape, {x.shape} != {y.shape}")
-        return (x.reshape(-1, 1) - y.reshape(-1, 1)) / x.size
+from YzNet.Components import *
 
 
 class NeuralNetwork:
@@ -122,6 +52,10 @@ class NeuralNetwork:
     def plot_loss(self) -> None:
         plt.plot(self.history)
         plt.show()
+
+    def summary(self) -> None:
+        for l in self.layers:
+            print(l)
 
     def load_model(self, file_path: str = "./model.txt") -> None:
         file = open(file_path, mode="r", encoding="utf-8")

@@ -1,5 +1,6 @@
 import numpy as np
-from Network import *
+from YzNet.Components import *
+from YzNet.Network import NeuralNetwork
 
 INPUT_DIM = 2
 OUTPUT_DIM = 1
@@ -11,9 +12,5 @@ print(f"{A.shape}, {B.shape}")
 
 nn = NeuralNetwork()
 nn.load_model()
-nn.learn(A, B, 1000000)
-nn.plot_loss()
-nn.save_weight()
-nn.save_model()
-
-
+nn.load_weight()
+nn.summary()
