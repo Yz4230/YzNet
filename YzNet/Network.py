@@ -5,6 +5,7 @@ from typing import List, Type, Dict, Union
 import matplotlib.pyplot as plt
 
 from YzNet.Components import *
+from YzNet.LossFunctions import *
 
 
 class NeuralNetwork:
@@ -53,6 +54,7 @@ class NeuralNetwork:
         plt.show()
 
     def summary(self) -> None:
+        print("=" * 10 + "Network Summary" + "=" * 10)
         for l in self.layers:
             print(l)
 

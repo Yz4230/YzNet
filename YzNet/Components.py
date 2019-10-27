@@ -1,5 +1,4 @@
 from abc import abstractmethod, ABCMeta
-
 import numpy as np
 
 
@@ -29,13 +28,13 @@ class Neuron(NetworkComponent):
         self.grad = np.zeros(self.weight.shape)
         self.lr = lr
 
-    def forward(self, x: np.ndarray):
+    def forward(self, x: np.ndarray) -> np.ndarray:
         if self.input.shape != x.shape:
             raise ValueError(f"Expected shape {self.input.shape}, but input shape {x.shape}")
         self.input = x
         return np.dot(self.weight, self.input)
 
-    def backward(self, dx: np.ndarray):
+    def backward(self, dx: np.ndarray) -> np.ndarray:
         self.grad = np.dot(dx, self.input.reshape(1, -1))
         return np.dot(self.weight.T, dx)
 
@@ -58,11 +57,11 @@ class Sigmoid(NetworkComponent):
     def __init__(self):
         self.output = None
 
-    def forward(self, x: np.ndarray):
+    def forward(self, x: np.ndarray) -> np.ndarray:
         self.output = 1 / (1 + np.exp(-x))
         return self.output
 
-    def backward(self, dx: np.ndarray):
+    def backward(self, dx: np.ndarray) -> np.ndarray:
         return self.output * (1 - self.output)
 
 
@@ -76,15 +75,3 @@ class Softmax(NetworkComponent):
 
     def backward(self, dx: np.ndarray) -> np.ndarray:
         return self.output * (1 - self.output)
-
-
-class MSE:
-    @classmethod
-    def forward(cls, x: np.ndarray, y: np.ndarray) -> np.float64:
-        return np.mean(np.square(y.flatten() - x.flatten())) / 2
-
-    @classmethod
-    def backward(cls, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        if x.shape != y.shape:
-            raise ValueError(f"Invalid shape, {x.shape} != {y.shape}")
-        return (x.reshape(-1, 1) - y.reshape(-1, 1)) / x.size
