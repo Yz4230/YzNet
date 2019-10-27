@@ -3,7 +3,6 @@ import re
 from typing import List, Type, Dict, Union
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from YzNet.Components import *
 
@@ -59,10 +58,11 @@ class NeuralNetwork:
 
     def load_model(self, file_path: str = "./model.txt") -> None:
         file = open(file_path, mode="r", encoding="utf-8")
-        str2class: Dict[str, Type[Union[Neuron, Sigmoid, ReLU]]] = {
+        str2class: Dict[str, Type[Union[Neuron, Sigmoid, ReLU, Softmax]]] = {
             Neuron.get_layer_name(): Neuron,
             Sigmoid.get_layer_name(): Sigmoid,
-            ReLU.get_layer_name(): ReLU
+            ReLU.get_layer_name(): ReLU,
+            Softmax.get_layer_name(): Softmax
         }
         pattern_option = re.compile(r"([^ ,\n]+)")
         for l in file:

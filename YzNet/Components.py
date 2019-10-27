@@ -66,6 +66,18 @@ class Sigmoid(NetworkComponent):
         return self.output * (1 - self.output)
 
 
+class Softmax(NetworkComponent):
+    def __init__(self):
+        self.output = None
+
+    def forward(self, x: np.ndarray) -> np.ndarray:
+        self.output = np.exp(x) / np.sum(np.exp(x))
+        return self.output
+
+    def backward(self, dx: np.ndarray) -> np.ndarray:
+        return self.output * (1 - self.output)
+
+
 class MSE:
     @classmethod
     def forward(cls, x: np.ndarray, y: np.ndarray) -> np.float64:
