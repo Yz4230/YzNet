@@ -54,7 +54,7 @@ class NeuralNetwork:
         plt.show()
 
     def summary(self) -> None:
-        print("=" * 10 + "Network Summary" + "=" * 10)
+        print("=" * 10 + "|Network Summary|" + "=" * 10)
         for l in self.layers:
             print(l)
 
