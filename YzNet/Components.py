@@ -50,7 +50,7 @@ class ReLU(NetworkComponent):
         return np.maximum(0, x)
 
     def backward(self, dx: np.ndarray) -> np.ndarray:
-        return np.where(dx > 0, 1, 0)
+        return np.where(dx > 0, 1, 0) * dx
 
 
 class Sigmoid(NetworkComponent):
@@ -62,7 +62,7 @@ class Sigmoid(NetworkComponent):
         return self.output
 
     def backward(self, dx: np.ndarray) -> np.ndarray:
-        return self.output * (1 - self.output)
+        return self.output * (1 - self.output) * dx
 
 
 class Softmax(NetworkComponent):
@@ -74,4 +74,4 @@ class Softmax(NetworkComponent):
         return self.output
 
     def backward(self, dx: np.ndarray) -> np.ndarray:
-        return self.output * (1 - self.output)
+        return self.output * (1 - self.output) * dx

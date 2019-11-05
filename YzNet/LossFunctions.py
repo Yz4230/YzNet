@@ -34,4 +34,4 @@ class CrossEntropy(ErrorFunction):
 
     @classmethod
     def backward(cls, x: np.ndarray, y: np.ndarray) -> np.float64:
-        pass
+        return -y / x
